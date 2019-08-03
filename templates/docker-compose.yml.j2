@@ -1,0 +1,49 @@
+version: '3.7'
+
+services:
+  traefik:
+    container_name: traefik
+    image: traefik:v1.7.12-alpine
+    restart: unless-stopped
+    command:
+      - --configFile={{ docker.base_folder }}/{{ docker.folders.config }}/traefik.toml
+    environment:
+      - "TZ={{ docker.timezone }}"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /usr/share/zoneinfo:/usr/share/zoneinfo:ro
+      - {{ docker_host.base_folder }}/{{ docker_host.folders.config }}/traefik.toml:{{ docker.base_folder }}/{{ docker.folders.config }}/traefik.toml
+      - {{ docker_host.base_folder }}/{{ docker_host.folders.certificates }}/acme.json:{{ docker.base_folder }}/{{ docker.folders.certificates }}/acme.json
+      - {{ docker_host.base_folder }}/{{ docker_host.folders.logs }}:{{ docker.base_folder }}/{{ docker.folders.logs }}
+    ports:
+      - 80:80
+      - 443:443
+    networks:
+      - {{ docker.external_network }}
+    labels:
+      traefik.enable: true
+      traefik.docker.network: {{ docker.external_network }}
+      treafik.backend: traefik
+      traefik.frontend.rule: Host:traefik.{{ letsencrypt.domain }}
+      traefik.port: 8080
+      traefik.frontend.auth.basic.users: {{ traefik.basicAuth }}
+  
+  yaya-landing:
+    container_name: yaya-landing
+    build: https://github.com/Petka17/yaya-site.git#dev
+    restart: unless-stopped
+    volumes:
+      - {{ docker_host.base_folder }}/{{ docker_host.folders.logs }}:/data/static/logs
+    networks:
+      - {{ docker.external_network }}
+    labels:
+      traefik.enable: true
+      traefik.docker.network: {{ docker.external_network }}
+      treafik.backend: yaya-landing
+      traefik.frontend.rule: Host:yaya.ru
+      traefik.frontend.entryPoint: https
+      traefik.port: 80
+
+networks:
+  {{ docker.external_network }}:
+    external: true

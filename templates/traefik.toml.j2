@@ -1,0 +1,55 @@
+debug = false
+
+defaultEntryPoints = ["http", "https"]
+
+logLevel = "INFO"
+
+[traefikLog]
+    filePath = "{{ docker.base_folder }}/{{ docker.folders.logs }}/traefik.log"
+    format = "common"
+
+[accessLog]
+    filePath = "{{ docker.base_folder }}/{{ docker.folders.logs }}/access.log"
+    format = "common"
+    bufferingSize = 100 # To write the logs in async
+[accesslog.fields]
+    names = "StartUTC=drop"
+
+# Create two entry points
+[entryPoints]
+
+# HTTP endpoint on port 80
+[entryPoints.http]
+    address = ":80"
+[entryPoints.http.redirect]
+    # All incoming traffic on port 80 
+    # will immediately get redirected to HTTPS.
+    entryPoint = "https"
+
+# HTTPS endpoint on port 443 
+[entryPoints.https]
+    address = ":443"
+[entryPoints.https.tls]
+
+[retry]
+
+[api]
+
+[docker]
+    # Docker unix socket
+    endpoint = "unix:///var/run/docker.sock"
+    domain = "{{ letsencrypt.domain }}"
+    # Listen for container events
+    watch = true
+    # New containers will not be exposed by Traefik by default
+    exposedByDefault = false
+
+# Enable automatic request and configuration of SSL certificates using Let's Encrypt
+[acme]
+    email = "{{ letsencrypt.email }}"
+    # Certificates storage
+    storage = "{{ docker.base_folder }}/{{ docker.folders.certificates }}/acme.json"
+    entryPoint = "https"
+    onHostRule = true
+[acme.httpChallenge]
+    entryPoint = "http"

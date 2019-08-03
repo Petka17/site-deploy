@@ -1,0 +1,55 @@
+---
+- hosts: base
+  gather_facts: no
+  become: true # TODO: find out the better way
+
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+
+  vars_files:
+    - group_vars/secret.yml
+
+  tasks:
+    - name: Ensure base folder
+      file:
+        path: "{{ docker_host.base_folder }}"
+        state: directory
+
+    - name: Ensure folders
+      file:
+        path: "{{ docker_host.base_folder }}/{{ item }}"
+        state: directory
+      with_items:
+        - "{{ docker_host.folders.config }}"
+        - "{{ docker_host.folders.certificates }}"
+        - "{{ docker_host.folders.logs }}"
+
+    - name: Ensure traefik config file
+      template:
+        dest: "{{ docker_host.base_folder }}/{{ docker_host.folders.config }}/traefik.toml"
+        src: "templates/traefik.toml.j2"
+
+    - name: Create empty acme.json file if it is not exists
+      copy:
+        content: ""
+        dest: "{{ docker_host.base_folder }}/{{ docker_host.folders.certificates }}/acme.json"
+        force: no
+
+    - name: Ensure docker-compose file
+      template:
+        dest: "{{ docker_host.base_folder }}/docker-compose.yml"
+        src: "templates/docker-compose.yml.j2"
+
+    - name: Create docker network
+      docker_network:
+        name: "{{ docker.external_network }}"
+        state: present
+
+    - name: Ensure latest versions of docker-compose services are running
+      docker_compose:
+        project_name: site
+        project_src: "{{ docker_host.base_folder }}"
+        files: docker-compose.yml
+        pull: yes
+        build: yes
+        state: present

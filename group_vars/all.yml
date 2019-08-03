@@ -1,0 +1,15 @@
+docker_host:
+  base_folder: /opt/traefik
+  folders:
+    config: config
+    certificates: cert
+    logs: logs
+
+docker:
+  external_network: web
+  timezone: Europe/Moscow
+  base_folder: /traefik
+  folders:
+    config: config
+    certificates: cert
+    logs: logs
