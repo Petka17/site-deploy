@@ -27,7 +27,21 @@ services:
       traefik.frontend.rule: Host:traefik.{{ letsencrypt.domain }}
       traefik.port: 8080
       traefik.frontend.auth.basic.users: {{ traefik.basicAuth }}
-  
+
+  static:
+    container_name: static
+    build: https://github.com/Petka17/site-static.git
+    restart: unless-stopped
+    networks:
+      - {{ docker.external_network }}
+    labels:
+      traefik.enable: true
+      traefik.docker.network: {{ docker.external_network }}
+      treafik.backend: static
+      traefik.frontend.rule: Host:{{ letsencrypt.domain }}
+      traefik.frontend.entryPoint: https
+      traefik.port: 80
+ 
   yaya-landing:
     container_name: yaya-landing
     build: https://github.com/Petka17/yaya-site.git#dev
