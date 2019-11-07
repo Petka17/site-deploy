@@ -41,7 +41,21 @@ services:
       traefik.frontend.rule: Host:{{ letsencrypt.domain }}
       traefik.frontend.entryPoint: https
       traefik.port: 80
- 
+
+  elevator:
+    container_name: elevator
+    build: https://github.com/Petka17/elevator-react.git
+    restart: unless-stopped
+    networks:
+      - {{ docker.external_network }}
+    labels:
+      traefik.enable: true
+      traefik.docker.network: {{ docker.external_network }}
+      treafik.backend: elevator
+      traefik.frontend.rule: Host:elevator.{{ letsencrypt.domain }}
+      traefik.frontend.entryPoint: https
+      traefik.port: 80
+  
   yaya-landing:
     container_name: yaya-landing
     build: https://github.com/Petka17/yaya-site.git#dev
