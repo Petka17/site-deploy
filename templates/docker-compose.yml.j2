@@ -55,7 +55,21 @@ services:
       traefik.frontend.rule: Host:elevator.{{ letsencrypt.domain }}
       traefik.frontend.entryPoint: https
       traefik.port: 80
-  
+
+  address-form:
+    container_name: address-form
+    build: https://github.com/Petka17/address-form.git
+    restart: unless-stopped
+    networks:
+      - {{ docker.external_network }}
+    labels:
+      traefik.enable: true
+      traefik.docker.network: {{ docker.external_network }}
+      treafik.backend: address-form
+      traefik.frontend.rule: Host:elevator.{{ letsencrypt.domain }}
+      traefik.frontend.entryPoint: https
+      traefik.port: 80
+
   yaya-landing:
     container_name: yaya-landing
     build: https://github.com/Petka17/yaya-site.git#dev
